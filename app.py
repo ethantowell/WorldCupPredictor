@@ -123,7 +123,7 @@ def get_predicted_bracket():
         slot_map[f'2{grp}'] = ranked[1]
 
     thirds = sorted(
-        [(group_standings[g][2], strength.get(group_standings[g][2], 50)) for g in GROUPS],
+        [(group_standings[g][2], attack_s.get(group_standings[g][2], 0)) for g in GROUPS],
         key=lambda x: -x[1]
     )
     best_thirds = [t[0] for t in thirds[:8]]
@@ -578,13 +578,13 @@ with tab4:
         # Simulate 10,000 matches quickly
         @st.cache_data
         def h2h_sim(ta, tb, n=10_000):
-            import sys
-            sys.path.insert(0, 'C:/Users/ethan/Documents/World Cup')
-            from wc_predictor import load_data, estimate_strengths, apply_form_adjustment, expected_goals
-            results, teams_df = load_data()
-            atk, dfs, _ = estimate_strengths(results)
-            atk, dfs    = apply_form_adjustment(atk, dfs, teams_df)
-            xg_a, xg_b  = expected_goals(ta, tb, atk, dfs)
+            s_df = pd.read_csv('C:/Users/ethan/Documents/World Cup/wc2026_strengths.csv').set_index('team')
+            atk  = s_df['attack'].to_dict()
+            dfs  = s_df['defense'].to_dict()
+            global_atk = np.mean(list(atk.values()))
+            global_dfs = np.mean(list(dfs.values()))
+            xg_a = np.exp(atk.get(ta, global_atk) - dfs.get(tb, global_dfs))
+            xg_b = np.exp(atk.get(tb, global_atk) - dfs.get(ta, global_dfs))
             ga = np.random.poisson(xg_a, n)
             gb = np.random.poisson(xg_b, n)
             wins_a  = (ga > gb).mean()

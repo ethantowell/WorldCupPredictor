@@ -1,11 +1,11 @@
 """
 FIFA World Cup 2026 Predictor
 Dixon-Coles Poisson model + Monte Carlo tournament simulation
-v2 fixes:
-  - Min games filter (removes minnow pollution)
-  - FIFA squad rating integration (top-23 OVA per nation)
-  - Confederation difficulty weights on form/qualifying
-  - Host nation boost (USA, Canada, Mexico)
+v3 fixes:
+  - Sharper time decay — recent results dominate
+  - Pre-tournament friendlies (Mar 2026+) treated as competitive
+  - UEFA Nations League treated as competitive (not friendly)
+  - FORM_BLEND raised so recent form has more impact
 """
 
 import numpy as np
@@ -16,13 +16,15 @@ import warnings
 warnings.filterwarnings('ignore')
 
 # ── Config ──────────────────────────────────────────────────────────────────
-XI              = 0.004    # Time decay (half-life ~173 days, was 0.003)
-FRIENDLY_WEIGHT = 0.4      # Friendlies weighted down further
-SQUAD_WEIGHT    = 0.40     # How much FIFA squad OVA blends into final strength
-FORM_BLEND      = 0.20     # How much form adjusts DC strengths
+XI              = 0.006    # Sharper decay — half-life ~116 days (was 0.004)
+FRIENDLY_WEIGHT = 0.35     # Standard friendlies weighted down
+PRE_WC_FRIENDLY_WEIGHT = 0.90  # March 2026 prep friendlies nearly full weight
+NATIONS_LEAGUE_WEIGHT  = 0.90  # UEFA/CONCACAF Nations League = competitive
+SQUAD_WEIGHT    = 0.35     # FIFA squad OVA blend (slightly less dominant)
+FORM_BLEND      = 0.30     # Raised from 0.20 — recent form matters more
 N_SIMS          = 50_000
 TRAIN_FROM      = '2022-01-01'
-MIN_GAMES       = 12            # Min matches needed for reliable DC estimate
+MIN_GAMES       = 12
 REF_DATE        = pd.Timestamp('2026-06-11')
 
 # Host nations get a boost from home crowd/travel advantage
@@ -127,7 +129,16 @@ def estimate_strengths(results, ref_date=REF_DATE):
 
     days_ago = (ref_date - df['date']).dt.days.clip(lower=0)
     df['w'] = np.exp(-XI * days_ago)
-    df.loc[df['tournament'] == 'Friendly', 'w'] *= FRIENDLY_WEIGHT
+
+    # Tournament-specific weights
+    is_friendly    = df['tournament'] == 'Friendly'
+    is_pre_wc      = is_friendly & (df['date'] >= '2026-03-01')
+    is_std_friendly = is_friendly & ~is_pre_wc
+    is_nations_lg  = df['tournament'].str.contains('Nations League', na=False)
+
+    df.loc[is_std_friendly,  'w'] *= FRIENDLY_WEIGHT
+    df.loc[is_pre_wc,        'w'] *= PRE_WC_FRIENDLY_WEIGHT
+    df.loc[is_nations_lg,    'w'] *= NATIONS_LEAGUE_WEIGHT
 
     # Count games per team and only keep teams with >= MIN_GAMES
     game_counts = pd.concat([df['home_team'], df['away_team']]).value_counts()
@@ -148,7 +159,11 @@ def estimate_strengths(results, ref_date=REF_DATE):
         df2['away_score'] = df2['away_score'].astype(int)
         days_ago2 = (ref_date - df2['date']).dt.days.clip(lower=0)
         df2['w'] = np.exp(-XI * days_ago2)
-        df2.loc[df2['tournament'] == 'Friendly', 'w'] *= FRIENDLY_WEIGHT
+        is_f2     = df2['tournament'] == 'Friendly'
+        is_pre2   = is_f2 & (df2['date'] >= '2026-03-01')
+        df2.loc[is_f2 & ~is_pre2, 'w'] *= FRIENDLY_WEIGHT
+        df2.loc[is_pre2,          'w'] *= PRE_WC_FRIENDLY_WEIGHT
+        df2.loc[df2['tournament'].str.contains('Nations League', na=False), 'w'] *= NATIONS_LEAGUE_WEIGHT
         extra = df2[
             (df2['home_team'].isin(missing) | df2['away_team'].isin(missing)) &
             (~df2.index.isin(df.index))
@@ -204,7 +219,8 @@ def estimate_strengths(results, ref_date=REF_DATE):
 def blend_squad_ratings(attack, defense, squad_ratings):
     """
     Blend FIFA squad OVA into DC strengths.
-    Higher squad OVA → nudge attack up, defense down (harder to score on).
+    Higher squad OVA → nudge attack up, defense up (harder to score on).
+    In this DC formulation: lam = exp(atk_a - dfs_b), so higher dfs = fewer goals conceded.
     """
     wc_teams = {t for teams in GROUPS.values() for t in teams}
 
@@ -232,7 +248,7 @@ def blend_squad_ratings(attack, defense, squad_ratings):
         # Weighted blend: (1-w)*dc + w*squad_signal
         w = SQUAD_WEIGHT
         atk_blended[team] = (1 - w) * attack[team] + w * squad_signal
-        dfs_blended[team] = (1 - w) * defense[team] + w * (-squad_signal * 0.6)
+        dfs_blended[team] = (1 - w) * defense[team] + w * (squad_signal * 0.6)
 
     return atk_blended, dfs_blended
 
