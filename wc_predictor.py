@@ -151,7 +151,7 @@ R32_BRACKET_SLOTS = [
 # ── Data Loading ─────────────────────────────────────────────────────────────
 def load_data():
     results = pd.read_csv(
-        'C:/Users/ethan/Downloads/international_results.csv', low_memory=False
+        'international_results.csv', low_memory=False
     )
     results['date'] = pd.to_datetime(results['date'])
 
@@ -162,13 +162,13 @@ def load_data():
     fix_team('home_team')
     fix_team('away_team')
 
-    teams_df = pd.read_excel('C:/Users/ethan/Downloads/fifa_wc2026_enriched.xlsx')
+    teams_df = pd.read_excel('fifa_wc2026_enriched.xlsx')
     return results, teams_df
 
 
 def compute_squad_ratings():
     """Return dict: team_name → avg OVA of top-23 players (pre-computed CSV)."""
-    df = pd.read_csv('C:/Users/ethan/Documents/World Cup/squad_ratings.csv')
+    df = pd.read_csv('squad_ratings.csv')
     squad_ratings = dict(zip(df['team'], df['squad_ova']))
     # Fill missing WC teams with FIFA-ranking-based estimates
     squad_ratings.update({'Curacao': 63.0, 'Iraq': 66.0, 'Jordan': 65.5, 'Qatar': 67.0})
@@ -549,7 +549,7 @@ if __name__ == '__main__':
         {'team': t, 'attack': round(attack.get(t, 0), 4), 'defense': round(defense.get(t, 0), 4)}
         for t in wc_teams
     ])
-    strengths_df.to_csv('C:/Users/ethan/Documents/World Cup/wc2026_strengths.csv', index=False)
+    strengths_df.to_csv('wc2026_strengths.csv', index=False)
 
     top10_atk = sorted([(t, attack[t]) for t in wc_teams if t in attack], key=lambda x: -x[1])[:10]
     print("  Top 10 attack (WC teams only):", [(t, round(v,3)) for t, v in top10_atk])
@@ -563,6 +563,6 @@ if __name__ == '__main__':
     print("=" * 70)
     print(results_df.to_string(index=False))
 
-    out = 'C:/Users/ethan/Documents/World Cup/wc2026_predictions.csv'
+    out = 'wc2026_predictions.csv'
     results_df.to_csv(out, index=False)
     print(f"\nSaved to: {out}")
