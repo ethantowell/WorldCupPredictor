@@ -84,14 +84,14 @@ R32_BRACKET_SLOTS = [
 ]
 
 # ── Bracket simulation ────────────────────────────────────────────────────────
-@st.cache_data
 def get_predicted_bracket():
-    # Use DC attack strengths from the predictor (same model as Monte Carlo)
+    # Use full DC strengths (attack + defense) — same model as Monte Carlo
     import os
     strengths_path = 'C:/Users/ethan/Documents/World Cup/wc2026_strengths.csv'
     if os.path.exists(strengths_path):
         s_df = pd.read_csv(strengths_path).set_index('team')
-        attack_s = s_df['attack'].to_dict()
+        attack_s  = s_df['attack'].to_dict()
+        defense_s = s_df['defense'].to_dict()
     else:
         # Fallback to composite_strength if not yet generated
         _enriched = load_enriched()
@@ -99,11 +99,13 @@ def get_predicted_bracket():
         for _, row in _enriched.iterrows():
             gname = DATASET_NAME.get(row['team_name'], row['team_name'])
             attack_s[gname] = (float(row.get('composite_strength') or 50) - 50) / 50
+        defense_s = {t: 0.0 for t in attack_s}
 
     def win_prob(ta, tb):
-        ea = np.exp(attack_s.get(ta, 0))
-        eb = np.exp(attack_s.get(tb, 0))
-        return ea / (ea + eb)
+        # Full DC model: xg = exp(atk_a - def_b), higher defense = harder to score on
+        xg_a = np.exp(attack_s.get(ta, 0) - defense_s.get(tb, 0))
+        xg_b = np.exp(attack_s.get(tb, 0) - defense_s.get(ta, 0))
+        return xg_a / (xg_a + xg_b)
 
     # Simulate group stage (expected value — no randomness)
     group_standings = {}
@@ -288,7 +290,6 @@ def draw_bracket_fig(bracket):
 
 
 # ── Load data ────────────────────────────────────────────────────────────────
-@st.cache_data
 def load_predictions():
     df = pd.read_csv('C:/Users/ethan/Documents/World Cup/wc2026_predictions.csv')
     df['confederation'] = df['team'].map(TEAM_CONF).fillna('TBD')

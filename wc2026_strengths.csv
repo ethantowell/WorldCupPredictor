@@ -1,49 +1,49 @@
 team,attack,defense
-Mexico,0.3892,0.9316
-South Korea,0.2854,0.2241
-South Africa,0.4045,0.1441
-Czech Republic,0.4605,0.265
-Canada,0.1918,0.6035
-Switzerland,0.8679,0.6982
-Qatar,-0.0712,-0.0741
-Bosnia and Herzegovina,0.3923,0.4314
-Brazil,1.0198,0.6612
-Morocco,0.6991,0.9417
-Haiti,-0.1464,0.0707
-Scotland,0.5232,0.53
-United States,0.4748,0.0749
-Paraguay,0.5291,0.6263
-Australia,0.6196,0.5564
-Turkey,0.6838,0.6313
-Germany,1.1334,0.5055
-Curacao,-0.1618,-0.2743
-Ivory Coast,0.5884,0.6847
-Ecuador,0.4015,1.1161
-Netherlands,1.1399,0.7254
-Japan,0.7465,1.0654
-Tunisia,0.3207,0.3905
-Sweden,0.7125,0.2402
-Belgium,1.0099,0.3855
-Egypt,0.3127,0.7138
-Iran,0.5046,0.5741
-New Zealand,0.2463,0.1681
-Spain,1.1281,1.0475
-Cape Verde,0.2733,0.0721
-Saudi Arabia,0.1392,0.0705
-Uruguay,0.3263,1.0197
-France,0.9526,0.8513
-Senegal,0.8382,0.5472
-Norway,0.8714,0.7823
-Iraq,0.0542,0.3214
-Argentina,0.95,0.9282
-Algeria,0.7091,0.7114
-Austria,0.6736,0.7004
-Jordan,0.4072,0.1397
-Portugal,0.8666,0.7618
-Uzbekistan,0.012,0.7445
-Colombia,0.8879,0.3286
-DR Congo,0.1965,0.8237
-England,0.893,0.8891
-Croatia,0.6185,0.4755
-Ghana,0.3827,0.217
-Panama,0.0304,0.3057
+Mexico,0.3293,0.5815
+South Korea,0.2064,0.1529
+South Africa,0.0417,-0.0292
+Czech Republic,0.1975,0.1123
+Canada,0.1221,0.3419
+Switzerland,0.5663,0.4373
+Qatar,-0.187,-0.1295
+Bosnia and Herzegovina,0.0021,0.1091
+Brazil,0.7353,0.4683
+Morocco,0.5458,0.6147
+Haiti,-0.4125,-0.1603
+Scotland,0.2189,0.2501
+United States,0.3698,0.1064
+Paraguay,0.2418,0.3149
+Australia,0.3771,0.3278
+Turkey,0.4453,0.3888
+Germany,0.7715,0.3669
+Curacao,-0.4144,-0.3461
+Ivory Coast,0.3139,0.3707
+Ecuador,0.2835,0.6514
+Netherlands,0.7948,0.4997
+Japan,0.5061,0.6433
+Tunisia,0.1009,0.1695
+Sweden,0.3558,0.1105
+Belgium,0.7102,0.3048
+Egypt,0.1952,0.4065
+Iran,0.3533,0.3612
+New Zealand,-0.2097,-0.1147
+Spain,0.8212,0.6966
+Cape Verde,-0.0896,-0.1043
+Saudi Arabia,-0.1107,-0.0736
+Uruguay,0.2816,0.6221
+France,0.7312,0.5926
+Senegal,0.5828,0.3741
+Norway,0.4893,0.4363
+Iraq,-0.1312,0.0802
+Argentina,0.7167,0.627
+Algeria,0.4197,0.4091
+Austria,0.4265,0.4188
+Jordan,0.0235,-0.0435
+Portugal,0.6576,0.5276
+Uzbekistan,-0.1084,0.3405
+Colombia,0.6168,0.2578
+DR Congo,0.0194,0.3998
+England,0.6787,0.6015
+Croatia,0.4817,0.3465
+Ghana,-0.0624,-0.0443
+Panama,0.0136,0.1663

@@ -1,7 +1,7 @@
 """
 FIFA World Cup 2026 Predictor
 Dixon-Coles Poisson model + Monte Carlo tournament simulation
-v3 fixes:
+v4 fixes:
   - Sharper time decay — recent results dominate
   - Pre-tournament friendlies (Mar 2026+) treated as competitive
   - UEFA Nations League treated as competitive (not friendly)
@@ -40,6 +40,61 @@ CONF_DIFFICULTY = {
     'CONCACAF': 0.62,
     'OFC':      0.42,
     'TBD':      0.60,
+}
+
+# ── FIFA World Rankings (April 1, 2026) ──────────────────────────────────────
+# Lower rank = better team. Used to blend consensus into DC strengths.
+FIFA_RANK_WEIGHT = 0.45   # 45% consensus, 55% DC+squad model
+
+FIFA_RANKS = {
+    'France':                   1,
+    'Spain':                    2,
+    'Argentina':                3,
+    'England':                  4,
+    'Portugal':                 5,
+    'Brazil':                   6,
+    'Netherlands':              7,
+    'Morocco':                  8,
+    'Belgium':                  9,
+    'Germany':                  10,
+    'Croatia':                  11,
+    'Colombia':                 13,
+    'Senegal':                  14,
+    'Mexico':                   15,
+    'United States':            16,
+    'Uruguay':                  17,
+    'Japan':                    18,
+    'Switzerland':              19,
+    'Iran':                     21,
+    'Turkey':                   22,
+    'Ecuador':                  23,
+    'Austria':                  24,
+    'South Korea':              25,
+    'Australia':                27,
+    'Algeria':                  28,
+    'Egypt':                    29,
+    'Canada':                   30,
+    'Norway':                   31,
+    'Panama':                   33,
+    'Ivory Coast':              34,
+    'Sweden':                   38,
+    'Paraguay':                 40,
+    'Czech Republic':           41,
+    'Scotland':                 43,
+    'Tunisia':                  44,
+    'DR Congo':                 46,
+    'Uzbekistan':               50,
+    'Qatar':                    55,
+    'Iraq':                     57,
+    'South Africa':             60,
+    'Saudi Arabia':             61,
+    'Jordan':                   63,
+    'Bosnia and Herzegovina':   65,
+    'Cape Verde':               69,
+    'Ghana':                    74,
+    'Curacao':                  82,
+    'Haiti':                    83,
+    'New Zealand':              85,
 }
 
 TEAM_CONF = {
@@ -299,6 +354,38 @@ def apply_form_adjustment(attack, defense, teams_df):
     return atk_adj, dfs_adj
 
 
+# ── FIFA Ranking Blend ───────────────────────────────────────────────────────
+def apply_fifa_rank_blend(attack, defense, fifa_ranks):
+    """
+    Blend April 2026 FIFA rankings into DC strengths.
+    Lower rank = better team = higher signal. Pulls model toward current consensus.
+    FIFA_RANK_WEIGHT controls how much consensus overrides historical data.
+    """
+    wc_teams = {t for teams in GROUPS.values() for t in teams}
+
+    rank_vals = [-fifa_ranks[t] for t in wc_teams if t in fifa_ranks]
+    rank_mean = np.mean(rank_vals)
+    rank_std  = max(np.std(rank_vals), 0.1)
+
+    dc_atk_vals = [attack[t] for t in wc_teams if t in attack]
+    dc_std = max(np.std(dc_atk_vals), 0.01)
+
+    atk_out = dict(attack)
+    dfs_out = dict(defense)
+
+    for team in wc_teams:
+        if team not in attack or team not in fifa_ranks:
+            continue
+        z_rank = (-fifa_ranks[team] - rank_mean) / rank_std
+        rank_signal = z_rank * dc_std
+
+        w = FIFA_RANK_WEIGHT
+        atk_out[team] = (1 - w) * attack[team] + w * rank_signal
+        dfs_out[team] = (1 - w) * defense[team] + w * (rank_signal * 0.6)
+
+    return atk_out, dfs_out
+
+
 # ── Match Simulation ─────────────────────────────────────────────────────────
 def expected_goals(team_a, team_b, attack, defense):
     global_atk = np.mean(list(attack.values()))
@@ -436,7 +523,7 @@ def run_monte_carlo(attack, defense, n_sims=N_SIMS):
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 if __name__ == '__main__':
-    print("FIFA World Cup 2026 Predictor v2")
+    print("FIFA World Cup 2026 Predictor v4")
     print("=" * 50)
 
     print("\n[1/5] Loading data...")
@@ -451,9 +538,10 @@ if __name__ == '__main__':
     print("\n[3/5] Estimating Dixon-Coles team strengths...")
     attack, defense, home_adv = estimate_strengths(results)
 
-    print("\n[4/5] Blending squad ratings + form adjustments...")
+    print("\n[4/5] Blending squad ratings + form adjustments + FIFA rankings...")
     attack, defense = blend_squad_ratings(attack, defense, squad_ratings)
     attack, defense = apply_form_adjustment(attack, defense, teams_df)
+    attack, defense = apply_fifa_rank_blend(attack, defense, FIFA_RANKS)
 
     # Save attack strengths for app.py bracket
     wc_teams = [t for teams in GROUPS.values() for t in teams]
