@@ -87,7 +87,7 @@ R32_BRACKET_SLOTS = [
 def get_predicted_bracket():
     # Use full DC strengths (attack + defense) — same model as Monte Carlo
     import os
-    strengths_path = 'C:/Users/ethan/Documents/World Cup/wc2026_strengths.csv'
+    strengths_path = 'wc2026_strengths.csv'
     if os.path.exists(strengths_path):
         s_df = pd.read_csv(strengths_path).set_index('team')
         attack_s  = s_df['attack'].to_dict()
@@ -291,7 +291,7 @@ def draw_bracket_fig(bracket):
 
 # ── Load data ────────────────────────────────────────────────────────────────
 def load_predictions():
-    df = pd.read_csv('C:/Users/ethan/Documents/World Cup/wc2026_predictions.csv')
+    df = pd.read_csv('wc2026_predictions.csv')
     df['confederation'] = df['team'].map(TEAM_CONF).fillna('TBD')
     df['flag'] = df['team'].map(FLAG_EMOJI).fillna('🏳️')
     df['display'] = df['flag'] + '  ' + df['team']
@@ -300,7 +300,7 @@ def load_predictions():
 
 @st.cache_data
 def load_enriched():
-    return pd.read_excel('C:/Users/ethan/Downloads/fifa_wc2026_enriched.xlsx')
+    return pd.read_excel('fifa_wc2026_enriched.xlsx')
 
 df = load_predictions()
 enriched = load_enriched()
@@ -579,7 +579,7 @@ with tab4:
         # Simulate 10,000 matches quickly
         @st.cache_data
         def h2h_sim(ta, tb, n=10_000):
-            s_df = pd.read_csv('C:/Users/ethan/Documents/World Cup/wc2026_strengths.csv').set_index('team')
+            s_df = pd.read_csv('wc2026_strengths.csv').set_index('team')
             atk  = s_df['attack'].to_dict()
             dfs  = s_df['defense'].to_dict()
             global_atk = np.mean(list(atk.values()))

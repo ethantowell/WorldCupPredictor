@@ -1,5 +1,5 @@
 __pycache__/
 *.pyc
 .streamlit/
-*.xlsx
+# *.xlsx  # tracked: fifa_wc2026_enriched.xlsx needed for deployment
 *.csv.bak
